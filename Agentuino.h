@@ -163,23 +163,23 @@ typedef enum SNMP_SYNTAXES {
 typedef struct SNMP_OID {
 	byte data[SNMP_MAX_OID_LEN];  // ushort array insted??
 	size_t size;
+#define belongs_to_iso_identified_organisation false
 	//
-    void write_value(unsigned long* value)
+    void write_value(uint64_t* value)
     {
         do
         {
-            data[size++] = *value & 0xff & ~0x80;
+            data[size++] = *value & ~0x80;
             *value >>= 8;
         }
         while(*value);
-        data[size] &= 0x80;
+        data[size] |= 0x80;
     }
 	void fromString(const char *buffer)
     {
         char c;
         unsigned int i = 0;
-        unsigned long value = 0;
-        buffer += 2;
+        uint64_t value = 0;
         size = 0;
         while(c = *(buffer++))
         {
@@ -196,13 +196,13 @@ typedef struct SNMP_OID {
 	//
     void toString(char *buffer) {
         buffer[0] = '1';
-		buffer[1] = '.';
-		buffer[2] = '3';
-		buffer[3] = '\0';
+        buffer[1] = '.';
+        buffer[2] = '3';
+        buffer[3] = '\0';
 		//
 		char buff[16];
-		byte hsize = size - 1;
-		byte hpos = 1;
+		int hsize = size - 1;
+		int hpos = 1;
 		uint16_t subid;
 		//
 		while ( hsize > 0 ) {
@@ -214,7 +214,6 @@ typedef struct SNMP_OID {
 				subid = (subid << 7) + (b & ~0x80);
 				hsize--;
 			} while ( (hsize > 0) && ((b & 0x80) != 0) );
-            Serial.println(subid);
 			utoa(subid, buff, 10);
 			strcat(buffer, ".");
 			strcat(buffer, buff);
